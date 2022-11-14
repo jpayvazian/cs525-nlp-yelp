@@ -3,12 +3,10 @@ import pandas as pd
 
 DATA_DIR = 'data'
 BUSINESS = 'yelp_academic_dataset_business.json'
-CHECKIN = 'yelp_academic_dataset_checkin.json'
 REVIEW = 'yelp_academic_dataset_review.json'
-REVIEW_SUBSET = 'yelp_academic_dataset_review_subset.json'
-TIP = 'yelp_academic_dataset_tip.json'
-USER = 'yelp_academic_dataset_user.json'
+REVIEW_SAMPLE = 'yelp_academic_dataset_review_sample.json'
 
-# Loads specific file (business, checkin, review, tip, or user)
+# Loads json data
+# lines=True for kaggle data since formatted as separate objects
 def load_data(file):
-    return pd.read_json(os.path.join(DATA_DIR, file), lines=True)
+    return pd.read_json(os.path.join(DATA_DIR, file))
