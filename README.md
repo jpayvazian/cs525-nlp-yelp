@@ -4,7 +4,7 @@ Final project for CS525: Natural Language Processing
 Authors: Jack Ayvazian, Roopsa Ghosh, Dillon McCarthy
 
 1. Proposed question
-How can we generate realisic reviews for restaurants given a rating (1-5 stars), text seed (to begin the review), and word limit?
+How can we generate realistic reviews for restaurants given a rating (1-5 stars), text seed (to begin the review), and word limit?
 
 2. Proposed method/algorithm/model (in general)
 LSTM/RNN, GANs, Markov Chains
