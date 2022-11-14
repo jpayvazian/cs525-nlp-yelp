@@ -5,6 +5,7 @@ DATA_DIR = 'data'
 BUSINESS = 'yelp_academic_dataset_business.json'
 CHECKIN = 'yelp_academic_dataset_checkin.json'
 REVIEW = 'yelp_academic_dataset_review.json'
+REVIEW_SUBSET = 'yelp_academic_dataset_review_subset.json'
 TIP = 'yelp_academic_dataset_tip.json'
 USER = 'yelp_academic_dataset_user.json'
 
