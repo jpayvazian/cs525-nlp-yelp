@@ -4,10 +4,10 @@ Final project for CS525: Natural Language Processing
 Authors: Jack Ayvazian, Roopsa Ghosh, Dillon McCarthy
 
 1. Proposed question
-How can we generate reviews for a business given a rating and a business category?
+How can we generate realisic reviews for restaurants given a rating (1-5 stars), text seed (to begin the review), and word limit?
 
 2. Proposed method/algorithm/model (in general)
-Neural Network, LSTM, GANs
+LSTM/RNN, GANs, Markov Chains
 
 3. Evaluation method
 Testing a classifier (real/fake and trained on real, test on fake), analyzing cosine similarities
