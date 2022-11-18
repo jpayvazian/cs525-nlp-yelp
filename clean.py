@@ -7,10 +7,15 @@ from keras import layers
 
 DATA_DIR = 'data'
 REVIEW_SAMPLE = 'yelp_academic_dataset_review_sample.json'
+REVIEW_FILES = ['one_star.json', 'two_star.json', 'three_star.json', 'four_star.json', 'five_star.json']
 
-# HYPERPARAMETERS
+# MODEL ARCHITECTURE
 EMBEDDING_DIM = 32 # Embedding vetor dimensionality, increase?
-MAX_LEN = 150 # Pad/Truncate to this size, otherwise the max review may be too much padding on average
+LSTM_NEURONS = 128
+DROPOUT_RATE = 0.1 # Prevents overfitting
+
+# N-GRAM SLIDING WINDOW
+SEQ_LEN = 5
 
 # Cleans review text
 def clean_text(text):
@@ -25,60 +30,40 @@ def clean_text(text):
 
 # Creates RNN/LSTM Model
 def create_model(input_dim):
-    return Sequential([
-        layers.Embedding(input_dim, EMBEDDING_DIM, input_length=MAX_LEN),
-        # TODO: Finish model and experiment with different layers/values
-        layers.LSTM(),
-        layers.LSTM(),
-        layers.Dropout(),
-        layers.Dense()
+    model = Sequential([
+        layers.Embedding(input_dim, EMBEDDING_DIM, input_length=SEQ_LEN),
+        # TODO: Experiment with different layers/values
+        layers.LSTM(LSTM_NEURONS, return_sequences=True),
+        layers.LSTM(LSTM_NEURONS),
+        layers.Dropout(DROPOUT_RATE),
+        layers.Dense(input_dim, activation='softmax')
     ])
+    model.compile(loss='categorical_crossentropy', optimizer='adam')
+
+    return model
 
 if __name__ == "__main__":
     # Clean reviews
     # reviews = utils.load_data(REVIEW_SAMPLE)
     # reviews['text'] = reviews['text'].apply(clean_text)
 
-    # Separate reviews by star rating
-    reviews_1star = utils.load_data('one_star.json')
-    reviews_2star = utils.load_data('two_star.json')
-    reviews_3star = utils.load_data('three_star.json')
-    reviews_4star = utils.load_data('four_star.json')
-    reviews_5star = utils.load_data('five_star.json')
+    # Create separate models for each set of star reviews
+    for file in REVIEW_FILES:
+        reviews = utils.load_data(file)
 
-    # Tokenize reviews
-    tokenizer1 = Tokenizer()
-    tokenizer2 = Tokenizer()
-    tokenizer3 = Tokenizer()
-    tokenizer4 = Tokenizer()
-    tokenizer5 = Tokenizer()
+        # Tokenize text in sequence of integers
+        tokenizer = Tokenizer()
+        tokenizer.fit_on_texts(reviews['text'])
+        sequences = tokenizer.texts_to_sequences(reviews['text'])
+        # Vocabulary size
+        vocab_size = len(tokenizer.word_index) + 1
 
-    # Calculate vocabulary size
-    tokenizer1.fit_on_texts(reviews_1star['text'])
-    reviews_1star['sequences'] = tokenizer1.texts_to_sequences(reviews_1star['text'])
-    vocab_size_1star = len(tokenizer1.word_index) + 1
+        # Create subsequences of words (N-gram) as features
+        features = []
+        for s in sequences:
+            # Sequences will overlap in all but 1 word
+            for i in range(0,len(s)-1):
+                features.append(s[i:i+SEQ_LEN])
 
-    tokenizer2.fit_on_texts(reviews_2star['text'])
-    reviews_2star['sequences'] = tokenizer2.texts_to_sequences(reviews_2star['text'])
-    vocab_size_2star = len(tokenizer2.word_index) + 1
-
-    tokenizer3.fit_on_texts(reviews_3star['text'])
-    reviews_3star['sequences'] = tokenizer3.texts_to_sequences(reviews_3star['text'])
-    vocab_size_3star = len(tokenizer3.word_index) + 1
-
-    tokenizer4.fit_on_texts(reviews_4star['text'])
-    reviews_4star['sequences'] = tokenizer4.texts_to_sequences(reviews_4star['text'])
-    vocab_size_4star = len(tokenizer4.word_index) + 1
-
-    tokenizer5.fit_on_texts(reviews_5star['text'])
-    reviews_5star['sequences'] = tokenizer5.texts_to_sequences(reviews_5star['text'])
-    vocab_size_5star = len(tokenizer5.word_index) + 1
-
-    # TODO: Pad/truncate reviews to MAX_LEN
-
-    # Create RNN Models for each star category
-    model_1star = create_model(vocab_size_1star)
-    model_2star = create_model(vocab_size_2star)
-    model_3star = create_model(vocab_size_3star)
-    model_4star = create_model(vocab_size_4star)
-    model_5star = create_model(vocab_size_5star)
+        # Create RNN Model
+        rnn_model = create_model(vocab_size)
