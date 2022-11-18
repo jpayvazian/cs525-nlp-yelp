@@ -47,28 +47,32 @@ if __name__ == "__main__":
     reviews_5star = utils.load_data('five_star.json')
 
     # Tokenize reviews
-    tokenizer = Tokenizer()
+    tokenizer1 = Tokenizer()
+    tokenizer2 = Tokenizer()
+    tokenizer3 = Tokenizer()
+    tokenizer4 = Tokenizer()
+    tokenizer5 = Tokenizer()
 
     # Calculate vocabulary size
-    tokenizer.fit_on_texts(reviews_1star['text'])
-    # reviews_1star['sequences'] = tokenizer.texts_to_sequences(reviews_1star['text'])
-    vocab_size_1star = len(tokenizer.word_index) + 1
+    tokenizer1.fit_on_texts(reviews_1star['text'])
+    reviews_1star['sequences'] = tokenizer1.texts_to_sequences(reviews_1star['text'])
+    vocab_size_1star = len(tokenizer1.word_index) + 1
 
-    tokenizer.fit_on_texts(reviews_2star['text'])
-    # reviews_2star['sequences'] = tokenizer.texts_to_sequences(reviews_2star['text'])
-    vocab_size_2star = len(tokenizer.word_index) + 1
+    tokenizer2.fit_on_texts(reviews_2star['text'])
+    reviews_2star['sequences'] = tokenizer2.texts_to_sequences(reviews_2star['text'])
+    vocab_size_2star = len(tokenizer2.word_index) + 1
 
-    tokenizer.fit_on_texts(reviews_3star['text'])
-    # reviews_3star['sequences'] = tokenizer.texts_to_sequences(reviews_3star['text'])
-    vocab_size_3star = len(tokenizer.word_index) + 1
+    tokenizer3.fit_on_texts(reviews_3star['text'])
+    reviews_3star['sequences'] = tokenizer3.texts_to_sequences(reviews_3star['text'])
+    vocab_size_3star = len(tokenizer3.word_index) + 1
 
-    tokenizer.fit_on_texts(reviews_4star['text'])
-    # reviews_4star['sequences'] = tokenizer.texts_to_sequences(reviews_4star['text'])
-    vocab_size_4star = len(tokenizer.word_index) + 1
+    tokenizer4.fit_on_texts(reviews_4star['text'])
+    reviews_4star['sequences'] = tokenizer4.texts_to_sequences(reviews_4star['text'])
+    vocab_size_4star = len(tokenizer4.word_index) + 1
 
-    tokenizer.fit_on_texts(reviews_5star['text'])
-    # reviews_5star['sequences'] = tokenizer.texts_to_sequences(reviews_5star['text'])
-    vocab_size_5star = len(tokenizer.word_index) + 1
+    tokenizer5.fit_on_texts(reviews_5star['text'])
+    reviews_5star['sequences'] = tokenizer5.texts_to_sequences(reviews_5star['text'])
+    vocab_size_5star = len(tokenizer5.word_index) + 1
 
     # TODO: Pad/truncate reviews to MAX_LEN
 
