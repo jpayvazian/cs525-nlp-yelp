@@ -14,30 +14,34 @@ if __name__ == "__main__":
     reviews_5star = utils.load_data('five_star.json')
 
     # Tokenize reviews
-    tokenizer = Tokenizer()
+    tokenizer1 = Tokenizer()
+    tokenizer2 = Tokenizer()
+    tokenizer3 = Tokenizer()
+    tokenizer4 = Tokenizer()
+    tokenizer5 = Tokenizer()
 
     avg_review_len = []
     vocab_size = []
     # Calculate vocabulary size and truncate/pad reviews
-    tokenizer.fit_on_texts(reviews_1star['text'])
+    tokenizer1.fit_on_texts(reviews_1star['text'])
     avg_review_len.append(np.mean([len(s) for s in reviews_1star['sequences']]))
-    vocab_size.append(len(tokenizer.word_index) + 1)
+    vocab_size.append(len(tokenizer1.word_index) + 1)
 
-    tokenizer.fit_on_texts(reviews_2star['text'])
+    tokenizer2.fit_on_texts(reviews_2star['text'])
     avg_review_len.append(np.mean([len(s) for s in reviews_2star['sequences']]))
-    vocab_size.append(len(tokenizer.word_index) + 1)
+    vocab_size.append(len(tokenizer2.word_index) + 1)
 
-    tokenizer.fit_on_texts(reviews_3star['text'])
+    tokenizer3.fit_on_texts(reviews_3star['text'])
     avg_review_len.append(np.mean([len(s) for s in reviews_3star['sequences']]))
-    vocab_size.append(len(tokenizer.word_index) + 1)
+    vocab_size.append(len(tokenizer3.word_index) + 1)
 
-    tokenizer.fit_on_texts(reviews_4star['text'])
+    tokenizer4.fit_on_texts(reviews_4star['text'])
     avg_review_len.append(np.mean([len(s) for s in reviews_4star['sequences']]))
-    vocab_size.append(len(tokenizer.word_index) + 1)
+    vocab_size.append(len(tokenizer4.word_index) + 1)
 
-    tokenizer.fit_on_texts(reviews_5star['text'])
+    tokenizer5.fit_on_texts(reviews_5star['text'])
     avg_review_len.append(np.mean([len(s) for s in reviews_5star['sequences']]))
-    vocab_size.append(len(tokenizer.word_index) + 1)
+    vocab_size.append(len(tokenizer5.word_index) + 1)
 
     # Make graphs with data
     plt.bar([1,2,3,4,5], vocab_size)
