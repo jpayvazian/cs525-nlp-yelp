@@ -1,6 +1,8 @@
 import os
 import pandas as pd
 import json
+import re
+import numpy as np
 
 DATA_DIR = 'data'
 BUSINESS = 'yelp_academic_dataset_business.json'
@@ -13,6 +15,24 @@ CATEGORY = "Food"
 # lines=True for kaggle data since formatted as separate objects
 def load_data(file):
     return pd.read_json(os.path.join(DATA_DIR, file))
+
+# Cleans review text
+def clean_text(text):
+    # Get rid of punctuation and other special characters
+    text = text.replace("\n", " ")
+    text = re.sub(r'[^a-z0-9 ]+', '', text.lower())
+
+    return text
+
+# Samples prediction values for more variation
+# https://keras.io/examples/generative/lstm_character_level_text_generation/
+def sample_pred(pred, temp=1.0):
+    preds = np.asarray(pred).astype('float64')
+    preds = np.log(preds) / temp
+    exp_preds = np.exp(preds)
+    preds = exp_preds / np.sum(exp_preds)
+    probas = np.random.multinomial(1, preds, 1)
+    return np.argmax(probas)
 
 # Samples subset of reviews from kaggle data
 def sample_data():
