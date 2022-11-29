@@ -3,16 +3,19 @@ Final project for CS525: Natural Language Processing
 
 Authors: Jack Ayvazian, Roopsa Ghosh, Dillon McCarthy
 
-1. Proposed question
-How can we generate realistic reviews for restaurants given a rating (1-5 stars), text seed (to begin the review), and word limit?
+### Motivation
+How can we generate realistic reviews for restaurants given a rating (1-5 stars), text seed (to begin the review), and word/char limit?
 
-2. Proposed method/algorithm/model (in general)
-LSTM/RNN, GANs, Markov Chains
+### Models
+* Word and Character based keras LSTM
+* Fine tuned GPT2
 
-3. Evaluation method
-Testing a classifier (real/fake and trained on real, test on fake), analyzing cosine similarities
+### Evaluation
+* Testing the accuracy of a classifier (e.g Logistic Regression, SVM) with real and generated reviews
+* PCA Analysis on real/fake reviews to visualize how linearly separable the features are
 
-4. Any preliminary findings?
-Loading and cleaning data
-- Yelp data set is very large (> 4 mil)
-- Load subset of data into a new file for use
+#### TODO
+* GPT2 model
+* Improve and sample results by changing model architecture/hyperparameters, training more epochs, using more data
+* Evaluation
+* Presentation
