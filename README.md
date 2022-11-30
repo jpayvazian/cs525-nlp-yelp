@@ -15,7 +15,6 @@ How can we generate realistic reviews for restaurants given a rating (1-5 stars)
 * PCA Analysis on real/fake reviews to visualize how linearly separable the features are
 
 #### TODO
-* Improve char/word models by changing model architecture/hyperparameters, training more epochs, using more data
 * Generate sample reviews to use for evaluation
 * Evaluation
 * Presentation
