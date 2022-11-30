@@ -1,12 +1,13 @@
-import utils
+from utils import *
 import word_model
 import char_model
-REVIEW_FILES = ['one_star.json', 'two_star.json', 'three_star.json', 'four_star.json', 'five_star.json']
+import gpt
 STARS = ['1', '2', '3', '4', '5']
-MODEL_TYPES = ['w', 'c']
+MODEL_TYPES = ['w', 'c', 'g']
 
 if __name__ == "__main__":
     # 1. User input for star rating
+    reviews, model, tokenizer = None, None, None
     while True:
         star = input("Enter star rating for review (1-5)")
         if star not in STARS:
@@ -14,12 +15,12 @@ if __name__ == "__main__":
             continue
 
         print("Loading data...")
-        reviews = utils.load_data(REVIEW_FILES[int(star)-1])
+        reviews = load_data(REVIEW_FILES[int(star)-1])['text'].to_list()
         break
 
     # 2. User input for model type
     while True:
-        model_type = input("Model type: word or char? [w/c]").lower()
+        model_type = input("Model type: word, char, or GPT2? [w/c/g]").lower()
         if model_type not in MODEL_TYPES:
             print("Invalid model type")
             continue
@@ -27,30 +28,26 @@ if __name__ == "__main__":
         print("Training model...")
         break
 
-    # 3. Build word model
-    if model_type == 'w':
-        model, tokenizer = word_model.create_word_model(reviews)
-        # 4. Generate reviews
-        while True:
-            try:
-                review_len = int(input("Enter review length (# words):"))
-                seed = input("Enter text sample to start the review:").lower()
+    # 3. Build model
+    if model_type == 'g':
+        model = gpt.finetune_gpt2(os.path.join(DATA_DIR, TEXT_FILES[int(star)-1]))
 
-                print(word_model.generate_review(seed, model, tokenizer, review_len))
-            # Type a non-number for review len to quit
-            except:
-                break
-
-    # 3. Build char model
     elif model_type == 'c':
-        model, chars_map = char_model.create_char_model(reviews)
-        # 4. Generate reviews
-        while True:
-            try:
-                review_len = int(input("Enter review length (# characters):"))
-                seed = input("Enter text sample to start the review:").lower()
+        model, tokenizer = char_model.create_char_model(reviews)
 
-                print(char_model.generate_review(seed, model, chars_map, review_len))
-            # Type a non-number for review len to quit
-            except:
-                break
+    elif model_type == 'w':
+        model, tokenizer = word_model.create_word_model(reviews)
+
+    # 4. Generate reviews
+    while True:
+        review_len = int(input("Enter review length (# words/chars):"))
+        seed = input("Enter text sample to start the review:").lower()
+
+        if model_type == 'g':
+            gpt.generate_review(model, seed, review_len)
+
+        elif model_type == 'c':
+            print(char_model.generate_review(model, tokenizer, seed, review_len))
+
+        elif model_type == 'w':
+            print(word_model.generate_review(model, tokenizer, seed, review_len))
