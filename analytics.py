@@ -1,11 +1,38 @@
-import os
-import utils
+from utils import *
 from keras.preprocessing.text import Tokenizer
-import numpy as np
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.decomposition import TruncatedSVD
+from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 
-PLOT_DIR = 'plots'
-REVIEW_FILES = ['one_star.json', 'two_star.json', 'three_star.json', 'four_star.json', 'five_star.json']
+# LSA Analysis on 5 star reviews
+def LSA():
+    real = load_data(REVIEW_FILES[4])['text'].to_list()[:GEN_SIZE]
+    fake = load_json(FAKE_REVIEW_FILES[4])
+
+    # Add labels and merge data
+    real = pd.DataFrame(real, columns=['text'])
+    fake = pd.DataFrame(fake, columns=['text'])
+    real['label'] = 1
+    fake['label'] = 0
+    both = pd.concat([fake, real])
+
+    # Use Count Vectorizer to turn text in numerical data
+    cv = CountVectorizer()
+    review_matrix = cv.fit_transform(both['text'])
+
+    # Latent Semantic Analysis
+    lsa = TruncatedSVD(n_components=2)
+    lsa_matrix = lsa.fit_transform(review_matrix)
+
+    # t-SNE Clustering of predicted (real or fake)
+    tsne = TSNE(n_components=2, perplexity=50)
+    tsne_vectors = tsne.fit_transform(lsa_matrix)
+
+    # Visualize
+    plt.scatter(tsne_vectors[:, 0], tsne_vectors[:, 1], c=both['label'])
+    plt.title('t-SNE Clustering of LSA: Real vs Generated YELP Reviews')
+    plt.savefig(os.path.join(PLOT_DIR, 'LSA.png'))
 
 if __name__ == "__main__":
     # Metrics for data exploration
@@ -13,7 +40,7 @@ if __name__ == "__main__":
     vocab_size = []
 
     for file in REVIEW_FILES:
-        reviews = utils.load_data(file)
+        reviews = load_data(file)
         tokenizer = Tokenizer()
         tokenizer.fit_on_texts(reviews['text'])
 

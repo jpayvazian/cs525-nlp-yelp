@@ -8,6 +8,7 @@ MODEL_TYPES = ['w', 'c', 'g']
 if __name__ == "__main__":
     # 1. User input for star rating
     reviews, model, tokenizer = None, None, None
+    file_name, run_name = '', ''
     while True:
         star = input("Enter star rating for review (1-5)")
         if star not in STARS:
@@ -16,6 +17,8 @@ if __name__ == "__main__":
 
         print("Loading data...")
         reviews = load_data(REVIEW_FILES[int(star)-1])['text'].to_list()
+        file_name = os.path.join(DATA_DIR, TEXT_FILES[int(star) - 1])
+        run_name = f"{star}star_{EPOCHS}epoch"
         break
 
     # 2. User input for model type
@@ -30,7 +33,7 @@ if __name__ == "__main__":
 
     # 3. Build model
     if model_type == 'g':
-        model = gpt.finetune_gpt2(os.path.join(DATA_DIR, TEXT_FILES[int(star)-1]))
+        model = gpt.finetune_gpt2(file_name, run_name)
 
     elif model_type == 'c':
         model, tokenizer = char_model.create_char_model(reviews)
@@ -44,7 +47,7 @@ if __name__ == "__main__":
         seed = input("Enter text sample to start the review:").lower()
 
         if model_type == 'g':
-            gpt.generate_review(model, seed, review_len)
+            print(gpt.generate_review(model, review_len, run_name, seed))
 
         elif model_type == 'c':
             print(char_model.generate_review(model, tokenizer, seed, review_len))

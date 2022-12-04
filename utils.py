@@ -6,12 +6,15 @@ import numpy as np
 import random
 
 DATA_DIR = 'data'
+PLOT_DIR = 'plots'
 BUSINESS = 'yelp_academic_dataset_business.json'
 REVIEW = 'yelp_academic_dataset_review.json'
 REVIEW_SAMPLE = 'yelp_academic_dataset_review_sample.json'
 REVIEW_FILES = ['one_star.json', 'two_star.json', 'three_star.json', 'four_star.json', 'five_star.json']
+FAKE_REVIEW_FILES = ['fake_one_star.json', 'fake_two_star.json', 'fake_three_star.json', 'fake_four_star.json', 'fake_five_star.json']
 TEXT_FILES = ['one_star.txt', 'two_star.txt', 'three_star.txt', 'four_star.txt', 'five_star.txt']
 TRAIN_SIZE = 2000 # amount of reviews for training
+GEN_SIZE = 100 # amount of reviews to generate
 CATEGORY = "Food"
 
 # HYPERPARAMETERS
@@ -22,8 +25,9 @@ SEQ_LEN_WORD = 5 # word sequence len
 SEQ_LEN_CHAR = 30 # char sequence length
 WINDOW_WORD = 1 # amount the sliding window moves each time for word model
 WINDOW_CHAR = 5 # amount the sliding window moves each time for char model
-BATCH_SIZE = 32
-EPOCHS = 10
+BATCH_SIZE = 20
+EPOCHS = 50
+PREFIX_SIZE = 5
 GREEDY = False # If true, take best next word each time
 TEMP = 1.0 # Changes amount of variation in sampling
 
@@ -33,10 +37,18 @@ def shuffle_data(x,y):
     random.shuffle(data)
     return zip(*data)
 
-# Loads json data
+# Loads json data to pandas dataframe
 # lines=True for kaggle data since formatted as separate objects
 def load_data(file):
     return pd.read_json(os.path.join(DATA_DIR, file))
+
+# Loads json array to list
+# Used for generated reviews which dont have other fields for a pd dataframe
+def load_json(file):
+    with open(os.path.join(DATA_DIR, file), 'r') as f:
+        data = json.load(f)
+
+    return data
 
 # Creates a file for each star rating with just the review text
 def create_text_files():
