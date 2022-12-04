@@ -13,7 +13,7 @@ How can we generate realistic reviews for restaurants given a rating (1-5 stars)
 ### Evaluation
 * Testing the accuracy of a classifier (e.g Logistic Regression, SVM) with real and generated reviews
 * LSA Analysis on real/fake reviews to visualize how linearly separable the features are
-* POS Tagging on Real vs. Fake
+* POS Tagging on real/fake to see if there is a large difference in the frequency of certain POS
 
 #### TODO
 * Evaluation
