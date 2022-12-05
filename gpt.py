@@ -39,7 +39,9 @@ if __name__ == "__main__":
     fake_reviews = []
     # Generate reviews with same length and prefix as real ones
     for i in range(GEN_SIZE):
-        fake_reviews.append(generate_review(model, len(reviews[i].split()), run_name, ' '.join(reviews[i].split()[:PREFIX_SIZE])))
+        # Split review into list of words
+        review_words = reviews[i].split()
+        fake_reviews.append(generate_review(model, len(review_words), run_name, ' '.join(review_words[:PREFIX_SIZE])))
         print(f'\r{i+1}/{GEN_SIZE}', end= '')
 
     with open(os.path.join(DATA_DIR, FAKE_REVIEW_FILES[star-1]), 'w', encoding='utf8') as f:
