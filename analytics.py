@@ -6,12 +6,41 @@ from sklearn.manifold import TSNE
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
+from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 
+def data_exploration():
+    # Metrics for data exploration
+    avg_review_len = []
+    vocab_size = []
+
+    for file in REVIEW_FILES:
+        reviews = load_data(file)
+        tokenizer = Tokenizer()
+        tokenizer.fit_on_texts(reviews['text'])
+
+        # Calculate vocabulary size and average review length
+        avg_review_len.append(np.mean([len(w.split()) for w in reviews['text']]))
+        vocab_size.append(len(tokenizer.word_index) + 1)
+
+    # Make graphs with data
+    plt.bar([1,2,3,4,5], vocab_size)
+    plt.title('Yelp reviews: Star rating vs. Vocabulary size')
+    plt.xlabel("Stars")
+    plt.ylabel("Vocabulary size")
+    plt.savefig(os.path.join(PLOT_DIR, 'vocab_size.png'))
+    plt.clf()
+    plt.bar([1,2,3,4,5], avg_review_len)
+    plt.title('Yelp reviews: Average length of review')
+    plt.xlabel("Stars")
+    plt.ylabel("Average word count of review")
+    plt.savefig(os.path.join(PLOT_DIR, 'review_len.png'))
+
 # LSA Analysis on 5 star reviews
-def LSA():
-    real = load_data(REVIEW_FILES[4])['text'].to_list()[:GEN_SIZE]
-    fake = load_json(FAKE_REVIEW_FILES[4])
+def LSA(star_num):
+    # Load data for specified star rating
+    real = load_data(REVIEW_FILES[star_num])['text'].to_list()[:GEN_SIZE]
+    fake = load_json(FAKE_REVIEW_FILES[star_num])
 
     # Add labels and merge data
     real = pd.DataFrame(real, columns=['text'])
@@ -35,17 +64,61 @@ def LSA():
     # Visualize
     plt.scatter(tsne_vectors[:, 0], tsne_vectors[:, 1], c=both['label'])
     plt.title('t-SNE Clustering of LSA: Real vs Generated YELP Reviews')
-    plt.savefig(os.path.join(PLOT_DIR, 'LSA.png'))
+    plt.savefig(os.path.join(PLOT_DIR, f'LSA_{star_num}.png'))
 
-def machine_evaluation(real, fake):
+def simple_machine_evaluation(star_num):
+    # Load data for specified star rating
+    real = load_data(REVIEW_FILES[star_num])['text'].to_list()[:GEN_SIZE]
+    fake = load_json(FAKE_REVIEW_FILES[star_num])
+
     # Add labels and split data
     real = pd.DataFrame(real, columns=['text'])
     fake = pd.DataFrame(fake, columns=['text'])
     real['label'] = 1
     fake['label'] = 0
+    both = pd.concat([fake, real])
 
-    real_train_x, real_test_x, real_train_y, real_test_y = train_test_split(real['text'], real['label'], test_size=.3)
-    fake_train_x, fake_test_x, fake_train_y, fake_test_y = train_test_split(fake['text'], fake['label'], test_size=.3)
+    # Use Count Vectorizer to turn text in numerical data
+    cv = CountVectorizer()
+    vec = cv.fit_transform(both['text'])
+
+    train_x, test_x, train_y, test_y = train_test_split(vec, both['label'], test_size=.3)
+    
+    # Define and train model on combined data
+    model_real = RandomForestClassifier(max_depth=10)
+    model_real.fit(train_x, train_y)
+
+    # Evaluate classifier
+    pred = model_real.predict(test_x)
+    print(confusion_matrix(test_y, pred))
+    print('Accuracy\t' + str(model_real.score(test_x, test_y)))
+
+def class_machine_evaluation():
+    # Load data for specified star rating
+    all_real_reviews = []
+    all_fake_reviews = []
+    fake_labels = []
+    real_labels = []
+
+    for i in range(len(REVIEW_FILES)):
+        real = load_data(REVIEW_FILES[star_num])['text'].to_list()[:GEN_SIZE]
+        fake = load_json(FAKE_REVIEW_FILES[star_num])
+        all_real_reviews += real
+        all_fake_reviews += fake
+        fake_labels += [i+1] * len(fake)
+        real_labels += [i+1] * len(real)
+
+    # Combine in order for embeddings to be same dimensionality
+    combined_data = all_real_reviews + all_fake_reviews
+
+    # Use Count Vectorizer to turn text in numerical data
+    cv = CountVectorizer()
+    vec = cv.fit_transform(combined_data)
+    real_vec = vec[:len(all_real_reviews)]
+    fake_vec = vec[len(all_real_reviews):]
+
+    real_train_x, real_test_x, real_train_y, real_test_y = train_test_split(real_vec, real_labels, test_size=.3)
+    fake_train_x, fake_test_x, fake_train_y, fake_test_y = train_test_split(fake_vec, fake_labels, test_size=.3)
 
     # Define and train model on real data
     model_real = RandomForestClassifier(max_depth=10)
@@ -78,28 +151,9 @@ def machine_evaluation(real, fake):
     print('Accuracy\t' + str(model_fake.score(fake_test_x, fake_test_y)))
 
 if __name__ == "__main__":
-    # Metrics for data exploration
-    avg_review_len = []
-    vocab_size = []
 
-    for file in REVIEW_FILES:
-        reviews = load_data(file)
-        tokenizer = Tokenizer()
-        tokenizer.fit_on_texts(reviews['text'])
-
-        # Calculate vocabulary size and average review length
-        avg_review_len.append(np.mean([len(w.split()) for w in reviews['text']]))
-        vocab_size.append(len(tokenizer.word_index) + 1)
-
-    # Make graphs with data
-    plt.bar([1,2,3,4,5], vocab_size)
-    plt.title('Yelp reviews: Star rating vs. Vocabulary size')
-    plt.xlabel("Stars")
-    plt.ylabel("Vocabulary size")
-    plt.savefig(os.path.join(PLOT_DIR, 'vocab_size.png'))
-    plt.clf()
-    plt.bar([1,2,3,4,5], avg_review_len)
-    plt.title('Yelp reviews: Average length of review')
-    plt.xlabel("Stars")
-    plt.ylabel("Average word count of review")
-    plt.savefig(os.path.join(PLOT_DIR, 'review_len.png'))
+    star_num = 0        # The star rating 1-5 indexed at 0-4
+    # data_exploration()
+    # LSA(0)
+    simple_machine_evaluation(0)
+    # class_machine_evaluation()
