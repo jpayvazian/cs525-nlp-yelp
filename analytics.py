@@ -3,6 +3,9 @@ from keras.preprocessing.text import Tokenizer
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import TruncatedSVD
 from sklearn.manifold import TSNE
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 
 # LSA Analysis on 5 star reviews
@@ -33,6 +36,46 @@ def LSA():
     plt.scatter(tsne_vectors[:, 0], tsne_vectors[:, 1], c=both['label'])
     plt.title('t-SNE Clustering of LSA: Real vs Generated YELP Reviews')
     plt.savefig(os.path.join(PLOT_DIR, 'LSA.png'))
+
+def machine_evaluation(real, fake):
+    # Add labels and split data
+    real = pd.DataFrame(real, columns=['text'])
+    fake = pd.DataFrame(fake, columns=['text'])
+    real['label'] = 1
+    fake['label'] = 0
+
+    real_train_x, real_test_x, real_train_y, real_test_y = train_test_split(real['text'], real['label'], test_size=.3)
+    fake_train_x, fake_test_x, fake_train_y, fake_test_y = train_test_split(fake['text'], fake['label'], test_size=.3)
+
+    # Define and train model on real data
+    model_real = RandomForestClassifier(max_depth=10)
+    model_real.fit(real_train_x, real_train_y)
+
+    # Define and train model on fake data
+    model_fake = RandomForestClassifier(max_depth=10)
+    model_fake.fit(fake_train_x, fake_train_y)
+
+    # Evaluate classifier trained on real data
+    # Real Data Evaluatation
+    pred = model_real.predict(real_test_x)
+    print(confusion_matrix(real_test_y, pred))
+    print('Accuracy\t' + str(model_real.score(real_test_x, real_test_y)))
+
+    # Fake Data Evaluatation
+    pred = model_real.predict(fake_test_x)
+    print(confusion_matrix(fake_test_y, pred))
+    print('Accuracy\t' + str(model_real.score(fake_test_x, fake_test_y)))
+
+    # Evaluate classifier trained on fake data
+    # Real Data Evaluatation
+    pred = model_fake.predict(real_test_x)
+    print(confusion_matrix(real_test_y, pred))
+    print('Accuracy\t' + str(model_fake.score(real_test_x, real_test_y)))
+
+    # Fake Data Evaluatation
+    pred = model_fake.predict(fake_test_x)
+    print(confusion_matrix(fake_test_y, pred))
+    print('Accuracy\t' + str(model_fake.score(fake_test_x, fake_test_y)))
 
 if __name__ == "__main__":
     # Metrics for data exploration
