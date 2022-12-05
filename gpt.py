@@ -36,12 +36,10 @@ if __name__ == "__main__":
 
     # Get average lengths of reviews
     reviews = load_data(REVIEW_FILES[star-1])['text'].to_list()[:GEN_SIZE]
-    avg_len = int(np.mean([len(x) for x in reviews]))
-
     fake_reviews = []
     # Generate reviews with same length and prefix as real ones
     for i in range(GEN_SIZE):
-        fake_reviews.append(generate_review(model, avg_len, run_name, ' '.join(reviews[i].split()[:PREFIX_SIZE])))
+        fake_reviews.append(generate_review(model, len(reviews[i].split()), run_name, ' '.join(reviews[i].split()[:PREFIX_SIZE])))
         print(f'\r{i+1}/{GEN_SIZE}', end= '')
 
     with open(os.path.join(DATA_DIR, FAKE_REVIEW_FILES[star-1]), 'w', encoding='utf8') as f:
