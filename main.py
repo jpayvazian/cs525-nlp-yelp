@@ -39,7 +39,7 @@ if __name__ == "__main__":
         model, tokenizer = char_model.create_char_model(reviews)
 
     elif model_type == 'w':
-        model, tokenizer = word_model.create_word_model(reviews)
+        model, tokenizer = word_model.create_word_model(reviews, star)
 
     # 4. Generate reviews
     while True:

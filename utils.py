@@ -15,6 +15,7 @@ FAKE_REVIEW_FILES = ['fake_one_star.json', 'fake_two_star.json', 'fake_three_sta
 TEXT_FILES = ['one_star.txt', 'two_star.txt', 'three_star.txt', 'four_star.txt', 'five_star.txt']
 TRAIN_SIZE = 2000 # amount of reviews for training
 GEN_SIZE = 100 # amount of reviews to generate
+PREFIX_SIZE = 5 # number of words to use as seed
 CATEGORY = "Food"
 
 # HYPERPARAMETERS

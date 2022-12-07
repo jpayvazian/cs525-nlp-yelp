@@ -3,6 +3,7 @@ from keras.preprocessing.text import Tokenizer
 from keras.models import Sequential
 from keras import layers
 from keras.utils.np_utils import to_categorical
+import tensorflow as tf
 
 # Generates the review one word at a time until review length reached
 def generate_review(model, tokenizer, seed_text, review_len):
@@ -30,7 +31,7 @@ def generate_review(model, tokenizer, seed_text, review_len):
 
     return seed_text
 
-def create_word_model(reviews):
+def create_word_model(reviews, star):
     # Initialize tokenizer
     tokenizer = Tokenizer()
     tokenizer.fit_on_texts(reviews)
@@ -56,6 +57,11 @@ def create_word_model(reviews):
     # Create labels from last word/char of sequence
     y = to_categorical(np.array(y), num_classes=vocab_size)
 
+    # Create callback to save training checkpoint
+    checkpoint_path = f'checkpoint/{star}_word_model.ckpt'
+    checkpoint_dir = os.path.dirname(checkpoint_path)
+    cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path, save_weights_only=True, verbose=1)
+
     # Create and train LSTM Model
     model = Sequential([
         layers.Embedding(vocab_size, EMBEDDING_DIM, input_length=SEQ_LEN_WORD),
@@ -66,6 +72,14 @@ def create_word_model(reviews):
         layers.Dense(vocab_size, activation='softmax')
     ])
     model.compile(loss='categorical_crossentropy', optimizer='adam')
-    model.fit(np.array(x), y, epochs=EPOCHS, batch_size=BATCH_SIZE)
+
+    # Load from checkpoint if available
+    try:
+        model.load_weights(checkpoint_path)
+        print("Loading from checkpoint...")
+    except:
+        print('Creating new model...')
+    
+    model.fit(np.array(x), y, epochs=EPOCHS, batch_size=BATCH_SIZE, callbacks=[cp_callback])
 
     return model, tokenizer
