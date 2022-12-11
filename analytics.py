@@ -8,6 +8,7 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
+from transformers import TFAutoModel, AutoTokenizer, pipeline
 
 def data_exploration():
     # Metrics for data exploration
@@ -63,7 +64,7 @@ def LSA(star_num):
 
     # Visualize
     plt.scatter(tsne_vectors[:, 0], tsne_vectors[:, 1], c=both['label'])
-    plt.title('t-SNE Clustering of LSA: Real vs Generated YELP Reviews')
+    plt.title(f't-SNE Clustering of LSA: Real vs Generated YELP Reviews {star_num+1} stars')
     plt.savefig(os.path.join(PLOT_DIR, f'LSA_{star_num}.png'))
 
 def simple_machine_evaluation(star_num):
@@ -150,10 +151,32 @@ def class_machine_evaluation():
     print(confusion_matrix(fake_test_y, pred))
     print('Accuracy\t' + str(model_fake.score(fake_test_x, fake_test_y)))
 
+
+def gpt_detector():
+    # Load data for specified star rating
+    reviews = []
+    labels = []
+
+    for i in range(len(REVIEW_FILES)):
+        real = load_data(REVIEW_FILES[star_num])['text'].to_list()[:GEN_SIZE]
+        fake = load_json(FAKE_REVIEW_FILES[star_num])
+        reviews += [r[:512] for r in real]
+        reviews += [f[:512] for f in fake]
+        labels += ["LABEL_1"] * len(real)
+        labels += ["LABEL_0"] * len(fake)
+
+    classifier = pipeline(model="roberta-base-openai-detector")
+    results = classifier(reviews)
+    labels = np.array(labels)
+    pred = np.array([y.get('label') for y in results])
+
+    print(f'Acc: {np.mean(labels == pred)}')
+
 if __name__ == "__main__":
 
     star_num = 0        # The star rating 1-5 indexed at 0-4
     # data_exploration()
     # LSA(0)
-    simple_machine_evaluation(0)
+    # simple_machine_evaluation(0)
     # class_machine_evaluation()
+    gpt_detector()
