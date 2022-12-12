@@ -9,6 +9,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 from transformers import TFAutoModel, AutoTokenizer, pipeline
+from nltk.tokenize import word_tokenize
+from nltk.probability import FreqDist
 
 def data_exploration():
     # Metrics for data exploration
@@ -151,7 +153,6 @@ def class_machine_evaluation():
     print(confusion_matrix(fake_test_y, pred))
     print('Accuracy\t' + str(model_fake.score(fake_test_x, fake_test_y)))
 
-
 def gpt_detector():
     # Load data for specified star rating
     reviews = []
@@ -172,6 +173,33 @@ def gpt_detector():
 
     print(f'Acc: {np.mean(labels == pred)}')
 
+def word_frequencies(star):
+    # Load data for specified star rating
+    real = load_data(REVIEW_FILES[star])['text'].to_list()[:GEN_SIZE]
+    fake = load_json(FAKE_REVIEW_FILES[star])
+
+    # Add labels and split data
+    real = pd.DataFrame(real, columns=['text'])
+    fake = pd.DataFrame(fake, columns=['text'])
+
+    # Tokenize each review and add to list
+    real_tokens, fake_tokens = [], []
+    for real_review, fake_review in zip(real['text'], fake['text']):
+        real_tokens += word_tokenize(real_review)
+        fake_tokens += word_tokenize(fake_review)
+
+    # Get frequency distribution object
+    real_dist = FreqDist(real_tokens)
+    fake_dist = FreqDist(fake_tokens)
+
+    # Convert object to dataframe and save to csv
+    real_words, real_freq = zip(*real_dist.most_common())
+    fake_words, fake_freq = zip(*fake_dist.most_common())
+    real_df = pd.DataFrame(zip(real_words, real_freq), columns=['word', 'frequency'])
+    fake_df = pd.DataFrame(zip(fake_words, fake_freq), columns=['word', 'frequency'])
+    real_df.to_csv(f'./plots/real_{star}star_frequencies.csv')
+    fake_df.to_csv(f'./plots/fake_{star}star_frequencies.csv')
+
 if __name__ == "__main__":
 
     star_num = 0        # The star rating 1-5 indexed at 0-4
@@ -179,4 +207,5 @@ if __name__ == "__main__":
     # LSA(0)
     # simple_machine_evaluation(0)
     # class_machine_evaluation()
-    gpt_detector()
+    # gpt_detector()
+    # word_frequencies(star_num)
