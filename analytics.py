@@ -169,9 +169,9 @@ def gpt_detector():
     reviews = []
     labels = []
 
-    for i in range(len(REVIEW_FILES)):
-        real = load_data(REVIEW_FILES[star_num])['text'].to_list()[:GEN_SIZE]
-        fake = load_json(FAKE_REVIEW_FILES[star_num])
+    for s in range(len(REVIEW_FILES)):
+        real = load_data(REVIEW_FILES[s])['text'].to_list()[:GEN_SIZE]
+        fake = load_json(FAKE_REVIEW_FILES[s])
         reviews += [r[:512] for r in real]
         reviews += [f[:512] for f in fake]
         labels += ["LABEL_1"] * len(real)
