@@ -114,8 +114,8 @@ def class_machine_evaluation():
     real_labels = []
 
     for i in range(len(REVIEW_FILES)):
-        real = load_data(REVIEW_FILES[star_num])['text'].to_list()[:GEN_SIZE]
-        fake = load_json(FAKE_REVIEW_FILES[star_num])
+        real = load_data(REVIEW_FILES[i])['text'].to_list()[:GEN_SIZE]
+        fake = load_json(FAKE_REVIEW_FILES[i])
         all_real_reviews += real
         all_fake_reviews += fake
         fake_labels += [i+1] * len(fake)
@@ -124,7 +124,7 @@ def class_machine_evaluation():
     # Combine in order for embeddings to be same dimensionality
     combined_data = all_real_reviews + all_fake_reviews
 
-    # Use Count Vectorizer to turn text in numerical data
+    # Use TF-IDF Vectorizer to turn text in numerical data
     cv = TfidfVectorizer()
     vec = cv.fit_transform(combined_data)
     real_vec = vec[:len(all_real_reviews)]
@@ -147,13 +147,15 @@ def class_machine_evaluation():
     pred = model_real.predict(real_test_x)
     print('Real Data Evaluation')
     print(confusion_matrix(real_test_y, pred))
-    print('Accuracy\t' + str(model_real.score(real_test_x, real_test_y)))
+    rr_acc = model_real.score(real_test_x, real_test_y)
+    print('Accuracy\t' + str(rr_acc))
 
     # Fake Data Evaluatation
     pred = model_real.predict(fake_test_x)
     print('Fake Data Evaluation')
     print(confusion_matrix(fake_test_y, pred))
-    print('Accuracy\t' + str(model_real.score(fake_test_x, fake_test_y)))
+    rf_acc = model_real.score(fake_test_x, fake_test_y)
+    print('Accuracy\t' + str(rf_acc))
 
     # Evaluate classifier trained on fake data
     print('Evaluating classifier trained on fake data')
@@ -161,13 +163,93 @@ def class_machine_evaluation():
     pred = model_fake.predict(real_test_x)
     print('Real Data Evaluation')
     print(confusion_matrix(real_test_y, pred))
-    print('Accuracy\t' + str(model_fake.score(real_test_x, real_test_y)))
+    fr_acc = model_fake.score(real_test_x, real_test_y)
+    print('Accuracy\t' + str(fr_acc))
 
     # Fake Data Evaluatation
     pred = model_fake.predict(fake_test_x)
     print('Fake Data Evaluation')
     print(confusion_matrix(fake_test_y, pred))
-    print('Accuracy\t' + str(model_fake.score(fake_test_x, fake_test_y)))
+    ff_acc = model_fake.score(fake_test_x, fake_test_y)
+    print('Accuracy\t' + str(ff_acc))
+
+    return rr_acc, rf_acc, fr_acc, ff_acc
+
+def sentiment_machine_evaluation():
+    # Load data for specified star rating
+    all_real_reviews = []
+    all_fake_reviews = []
+    fake_labels = []
+    real_labels = []
+
+    for i in range(len(REVIEW_FILES)):
+        real = load_data(REVIEW_FILES[i])['text'].to_list()[:GEN_SIZE]
+        fake = load_json(FAKE_REVIEW_FILES[i])
+        all_real_reviews += real
+        all_fake_reviews += fake
+        fake_labels += [i+1] * len(fake)
+        real_labels += [i+1] * len(real)
+
+    # Combine in order for embeddings to be same dimensionality
+    combined_data = all_real_reviews + all_fake_reviews
+    combined_labels = real_labels + fake_labels
+
+    data = pd.DataFrame(zip(combined_data, combined_labels), columns=['reviews', 'star_rating'])
+
+    data['label'] = data['star_rating'].apply(lambda x: 'negative' if x < 4 else 'positive')
+
+    # Use TF-IDF Vectorizer to turn text in numerical data
+    cv = TfidfVectorizer()
+    vec = cv.fit_transform(combined_data)
+    real_vec = vec[:len(all_real_reviews)]
+    fake_vec = vec[len(all_real_reviews):]
+    real_labels = data['label'][:len(all_real_reviews)]
+    fake_labels = data['label'][len(all_fake_reviews):]
+
+    real_train_x, real_test_x, real_train_y, real_test_y = train_test_split(real_vec, real_labels, test_size=.3)
+    fake_train_x, fake_test_x, fake_train_y, fake_test_y = train_test_split(fake_vec, fake_labels, test_size=.3)
+
+    # Define and train model on real data
+    model_real = RandomForestClassifier(max_depth=10)
+    model_real.fit(real_train_x, real_train_y)
+
+    # Define and train model on fake data
+    model_fake = RandomForestClassifier(max_depth=10)
+    model_fake.fit(fake_train_x, fake_train_y)
+
+    # Evaluate classifier trained on real data
+    print('Evaluating classifier trained on real data')
+    # Real Data Evaluatation
+    pred = model_real.predict(real_test_x)
+    print('Real Data Evaluation')
+    print(confusion_matrix(real_test_y, pred))
+    rr_acc = model_real.score(real_test_x, real_test_y)
+    print('Accuracy\t' + str(rr_acc))
+
+    # Fake Data Evaluatation
+    pred = model_real.predict(fake_test_x)
+    print('Fake Data Evaluation')
+    print(confusion_matrix(fake_test_y, pred))
+    rf_acc = model_real.score(fake_test_x, fake_test_y)
+    print('Accuracy\t' + str(rf_acc))
+
+    # Evaluate classifier trained on fake data
+    print('Evaluating classifier trained on fake data')
+    # Real Data Evaluatation
+    pred = model_fake.predict(real_test_x)
+    print('Real Data Evaluation')
+    print(confusion_matrix(real_test_y, pred))
+    fr_acc = model_fake.score(real_test_x, real_test_y)
+    print('Accuracy\t' + str(fr_acc))
+
+    # Fake Data Evaluatation
+    pred = model_fake.predict(fake_test_x)
+    print('Fake Data Evaluation')
+    print(confusion_matrix(fake_test_y, pred))
+    ff_acc = model_fake.score(fake_test_x, fake_test_y)
+    print('Accuracy\t' + str(ff_acc))
+
+    return rr_acc, rf_acc, fr_acc, ff_acc
 
 def gpt_detector():
     # Load data for specified star rating
@@ -223,18 +305,19 @@ if __name__ == "__main__":
     # LSA(0)
     # simple_machine_evaluation(star_num)
     # class_machine_evaluation()
+    # sentiment_machine_evaluation()
     # gpt_detector()
     # word_frequencies(star_num)
 
-    # Run simple machine eval multiple times and save to csv for averaging classifier accuracy
+    # Run machine eval multiple times and save to csv for averaging classifier accuracy
     # reps = 20
-    # s = []
-    # for star in range(5):
-    #     s_star = []
-    #     for i in range(reps):
-    #         acc = simple_machine_evaluation(star, show_stats=False)
-    #         s_star.append(acc)
-    #     s.append(s_star)
+    # ac1, ac2, ac3, ac4 = [], [], [], []
+    # for i in range(reps):
+    #     a1, a2, a3, a4 = class_machine_evaluation()
+    #     ac1.append(a1)
+    #     ac2.append(a2)
+    #     ac3.append(a3)
+    #     ac4.append(a4)
 
-    # df = pd.DataFrame(zip(s[0], s[1], s[2], s[3], s[4]), columns=['1star', '2star', '3star', '4star', '5star'])
-    # df.to_csv('./results/separability.csv')
+    # df = pd.DataFrame(zip(ac1, ac2, ac3, ac4), columns=['real_trained_on_real', 'fake_trained_on_real', 'real_trained_on_fake', 'fake_trained_on_fake'])
+    # df.to_csv('./results/multiclass.csv')
