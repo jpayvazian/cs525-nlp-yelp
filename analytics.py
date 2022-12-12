@@ -71,7 +71,7 @@ def LSA(star_num):
     plt.savefig(os.path.join(PLOT_DIR, f'LSA_{star_num}.png'))
 
 # Analyzes separability of real and fake data using a binary classifier
-def simple_machine_evaluation(star_num):
+def simple_machine_evaluation(star_num, show_stats=True):
     # Load data for specified star rating
     real = load_data(REVIEW_FILES[star_num])['text'].to_list()[:GEN_SIZE]
     fake = load_json(FAKE_REVIEW_FILES[star_num])
@@ -84,7 +84,7 @@ def simple_machine_evaluation(star_num):
     both = pd.concat([fake, real])
 
     # Use Count Vectorizer to turn text in numerical data
-    cv = TfidfVectorizer()
+    cv = CountVectorizer()
     vec = cv.fit_transform(both['text'])
 
     train_x, test_x, train_y, test_y = train_test_split(vec, both['label'], test_size=.3)
@@ -93,11 +93,16 @@ def simple_machine_evaluation(star_num):
     model_real = RandomForestClassifier(max_depth=10)
     model_real.fit(train_x, train_y)
 
-    # Evaluate classifier
-    pred = model_real.predict(test_x)
-    print(f'Separability of {star_num+1}-star data')
-    print(confusion_matrix(test_y, pred))
-    print('Accuracy\t' + str(model_real.score(test_x, test_y)))
+    acc = model_real.score(test_x, test_y)
+
+    if show_stats:
+        # Evaluate classifier
+        pred = model_real.predict(test_x)
+        print(f'Separability of {star_num+1}-star data')
+        print(confusion_matrix(test_y, pred))
+        print('Accuracy\t' + str(acc))
+
+    return acc
 
 # Analyzes distribution of classes for real and fake data.  A classifier trained on real data to classify
 # a star rating 1-5 should (ideally) perform equally well on real and fake data, and vice versa
@@ -216,8 +221,20 @@ if __name__ == "__main__":
     star_num = 0        # The star rating 1-5 indexed at 0-4
     # data_exploration()
     # LSA(0)
-    for i in range(5):
-        simple_machine_evaluation(i)
+    # simple_machine_evaluation(star_num)
     # class_machine_evaluation()
     # gpt_detector()
     # word_frequencies(star_num)
+
+    # Run simple machine eval multiple times and save to csv for averaging classifier accuracy
+    # reps = 20
+    # s = []
+    # for star in range(5):
+    #     s_star = []
+    #     for i in range(reps):
+    #         acc = simple_machine_evaluation(star, show_stats=False)
+    #         s_star.append(acc)
+    #     s.append(s_star)
+
+    # df = pd.DataFrame(zip(s[0], s[1], s[2], s[3], s[4]), columns=['1star', '2star', '3star', '4star', '5star'])
+    # df.to_csv('./results/separability.csv')
