@@ -70,6 +70,19 @@ def LSA(star_num):
     plt.title(f't-SNE Clustering of LSA: Real vs Generated YELP Reviews {star_num+1} stars')
     plt.savefig(os.path.join(PLOT_DIR, f'LSA_{star_num}.png'))
 
+# Gets the accuracy per class given true and predicted labels.  To be used with machine evaluation
+# Returns a list of accuracies for each class
+def get_class_stats(labels, pred):
+    totals = [0, 0, 0, 0, 0]
+    accuracies = [0, 0, 0, 0, 0]
+    for guess, label in zip(pred, labels):
+        if guess == label:
+            accuracies[label-1] += 1
+        totals[label-1] += 1
+    accuracies = np.divide(np.array(accuracies), np.array(totals))
+
+    return accuracies
+
 # Analyzes separability of real and fake data using a binary classifier
 def simple_machine_evaluation(star_num, show_stats=True):
     # Load data for specified star rating
@@ -142,36 +155,22 @@ def class_machine_evaluation():
     model_fake.fit(fake_train_x, fake_train_y)
 
     # Evaluate classifier trained on real data
-    print('Evaluating classifier trained on real data')
     # Real Data Evaluatation
     pred = model_real.predict(real_test_x)
-    print('Real Data Evaluation')
-    print(confusion_matrix(real_test_y, pred))
-    rr_acc = model_real.score(real_test_x, real_test_y)
-    print('Accuracy\t' + str(rr_acc))
+    rr_acc = get_class_stats(real_test_y, pred)
 
     # Fake Data Evaluatation
     pred = model_real.predict(fake_test_x)
-    print('Fake Data Evaluation')
-    print(confusion_matrix(fake_test_y, pred))
-    rf_acc = model_real.score(fake_test_x, fake_test_y)
-    print('Accuracy\t' + str(rf_acc))
+    rf_acc = get_class_stats(fake_test_y, pred)
 
     # Evaluate classifier trained on fake data
-    print('Evaluating classifier trained on fake data')
     # Real Data Evaluatation
     pred = model_fake.predict(real_test_x)
-    print('Real Data Evaluation')
-    print(confusion_matrix(real_test_y, pred))
-    fr_acc = model_fake.score(real_test_x, real_test_y)
-    print('Accuracy\t' + str(fr_acc))
+    fr_acc = get_class_stats(real_test_y, pred)
 
     # Fake Data Evaluatation
     pred = model_fake.predict(fake_test_x)
-    print('Fake Data Evaluation')
-    print(confusion_matrix(fake_test_y, pred))
-    ff_acc = model_fake.score(fake_test_x, fake_test_y)
-    print('Accuracy\t' + str(ff_acc))
+    ff_acc = get_class_stats(fake_test_y, pred)
 
     return rr_acc, rf_acc, fr_acc, ff_acc
 
@@ -320,4 +319,4 @@ if __name__ == "__main__":
     #     ac4.append(a4)
 
     # df = pd.DataFrame(zip(ac1, ac2, ac3, ac4), columns=['real_trained_on_real', 'fake_trained_on_real', 'real_trained_on_fake', 'fake_trained_on_fake'])
-    # df.to_csv('./results/multiclass.csv')
+    # df.to_csv('./results/multiclass_class_stats.csv')
