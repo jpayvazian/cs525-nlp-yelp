@@ -3,6 +3,7 @@ from keras.preprocessing.text import Tokenizer
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import TruncatedSVD
+from sklearn.decomposition import LatentDirichletAllocation
 from sklearn.manifold import TSNE
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import confusion_matrix
@@ -14,6 +15,7 @@ from nltk.tokenize import word_tokenize
 from nltk.probability import FreqDist
 from nltk.translate.bleu_score import SmoothingFunction, corpus_bleu, sentence_bleu
 import itertools
+from sklearn.cluster import KMeans
 
 def data_exploration():
     # Metrics for data exploration
@@ -44,33 +46,37 @@ def data_exploration():
 
 # LSA Analysis on 5 star reviews
 def LSA(star_num):
-    # Load data for specified star rating
-    real = load_data(REVIEW_FILES[star_num])['text'].to_list()[:GEN_SIZE]
-    fake = load_json(FAKE_REVIEW_FILES[star_num])
+    both = pd.DataFrame()
+    # Combine all reviews for real and fake
+    for k in range(5):
+        real = load_data(REVIEW_FILES[k])['text'].to_list()[:GEN_SIZE]
+        fake = load_json(FAKE_REVIEW_FILES[k])
 
-    # Add labels and merge data
-    real = pd.DataFrame(real, columns=['text'])
-    fake = pd.DataFrame(fake, columns=['text'])
-    real['label'] = 1
-    fake['label'] = 0
-    both = pd.concat([fake, real])
+        # Add labels and merge data
+        real = pd.DataFrame(real, columns=['text'])
+        fake = pd.DataFrame(fake, columns=['text'])
+        real['label'] = 1
+        fake['label'] = 0
+        both = pd.concat([both, fake, real])
 
-    # Use Count Vectorizer to turn text in numerical data
-    cv = CountVectorizer()
-    review_matrix = cv.fit_transform(both['text'])
+    # Use Tf-idf Vectorizer to turn text in numerical data
+    tf = TfidfVectorizer()
+    review_matrix = tf.fit_transform(both['text'])
 
-    # Latent Semantic Analysis
-    lsa = TruncatedSVD(n_components=2)
-    lsa_matrix = lsa.fit_transform(review_matrix)
+    # LSA/LDA/Kmeans
+    # lsa = TruncatedSVD(n_components=5)
+    # lda = LatentDirichletAllocation(n_components=5)
+    kmeans = KMeans(n_clusters=2)
+    kmeans_matrix = kmeans.fit_transform(review_matrix)
 
     # t-SNE Clustering of predicted (real or fake)
     tsne = TSNE(n_components=2, perplexity=50)
-    tsne_vectors = tsne.fit_transform(lsa_matrix)
+    tsne_vectors = tsne.fit_transform(kmeans_matrix)
 
     # Visualize
     plt.scatter(tsne_vectors[:, 0], tsne_vectors[:, 1], c=both['label'])
-    plt.title(f't-SNE Clustering of LSA: Real vs Generated YELP Reviews {star_num+1} stars')
-    plt.savefig(os.path.join(PLOT_DIR, f'LSA_{star_num}.png'))
+    plt.title(f't-SNE KMeans Clustering: Real vs Generated YELP Reviews')
+    plt.savefig(os.path.join(PLOT_DIR, f'kmeans.png'))
 
 # Gets the accuracy per class given true and predicted labels.  To be used with machine evaluation
 # Returns a list of accuracies for each class
@@ -253,11 +259,10 @@ def sentiment_machine_evaluation():
     return rr_acc, rf_acc, fr_acc, ff_acc
 
 def gpt_detector():
-    # Load data for specified star rating
-    reviews = []
-    labels = []
-
+    classifier = pipeline(model="roberta-base-openai-detector")
     for s in range(len(REVIEW_FILES)):
+        reviews = []
+        labels = []
         real = load_data(REVIEW_FILES[s])['text'].to_list()[:GEN_SIZE]
         fake = load_json(FAKE_REVIEW_FILES[s])
         reviews += [r[:512] for r in real]
@@ -265,12 +270,10 @@ def gpt_detector():
         labels += ["LABEL_1"] * len(real)
         labels += ["LABEL_0"] * len(fake)
 
-    classifier = pipeline(model="roberta-base-openai-detector")
-    results = classifier(reviews)
-    labels = np.array(labels)
-    pred = np.array([y.get('label') for y in results])
+        results = classifier(reviews)
+        pred = np.array([y.get('label') for y in results])
 
-    print(f'Acc: {np.mean(labels == pred)}')
+        print(f'Acc star {s+1}: {np.mean(np.array(labels) == pred)}')
 
 def word_frequencies(star):
     # Load data for specified star rating
