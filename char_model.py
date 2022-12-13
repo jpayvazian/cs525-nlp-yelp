@@ -28,7 +28,7 @@ def generate_review(model, chars_map, seed_text, length):
 
     return seed_text
 
-def create_char_model(reviews):
+def create_char_model(reviews, star):
     # Unique characters
     chars = sorted(list(set(' '.join(reviews))))
     chars_map = dict((char, chars.index(char)) for char in chars)
@@ -61,6 +61,37 @@ def create_char_model(reviews):
         layers.Dense(len(chars), activation='softmax')
     ])
     model.compile(loss='categorical_crossentropy', optimizer='adam')
-    model.fit(x, y, epochs=EPOCHS, batch_size=BATCH_SIZE)
+
+    model.load_weights('./checkpoint/char_model/weights.h5')
+
+    # model.fit(x, y, epochs=EPOCHS, batch_size=BATCH_SIZE)
+
+    # model.save_weights('./checkpoint/char_model/weights.h5')
 
     return model, chars_map
+
+if __name__ == "__main__":
+    star = int(input("Enter star rating for review (1-5)"))
+
+    # Names for data text file and model save dir
+    file_name = os.path.join(DATA_DIR, TEXT_FILES[star - 1])
+    run_name = f"{star}star_char_model_{EPOCHS}epoch"
+    data_file_name = os.path.join(DATA_DIR, f'{star}star_char_model.json')
+
+    # Load reviews
+    reviews = load_data(REVIEW_FILES[star-1])['text'].to_list()[:GEN_SIZE]
+
+    # Finetune/load model
+    model, tokenizer = create_char_model(reviews, star)
+
+    # Generate reviews with same length and prefix as real ones
+    fake_reviews = []
+    for i in range(GEN_SIZE):
+        # Split review into list of words
+        review_words = reviews[i].split()
+        seed = ' '.join(review_words[:PREFIX_SIZE])
+        fake_reviews.append(generate_review(model, tokenizer, seed, len(reviews[i])))
+        print(f'\r{i+1}/{GEN_SIZE}', end= '')
+
+    with open(data_file_name, 'w', encoding='utf8') as f:
+        f.write(json.dumps(fake_reviews))
