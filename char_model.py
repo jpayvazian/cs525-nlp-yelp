@@ -86,6 +86,7 @@ if __name__ == "__main__":
 
     # Generate reviews with same length and prefix as real ones
     fake_reviews = []
+    GEN_SIZE = 1
     for i in range(GEN_SIZE):
         # Split review into list of words
         review_words = reviews[i].split()
