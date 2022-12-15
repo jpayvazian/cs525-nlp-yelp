@@ -32,6 +32,7 @@ def generate_review(model, tokenizer, seed_text, review_len):
     return seed_text
 
 def create_word_model(reviews, star):
+    tf.compat.v1.experimental.output_all_intermediates(True)
     # Initialize tokenizer
     tokenizer = Tokenizer()
     tokenizer.fit_on_texts(reviews)
@@ -75,9 +76,9 @@ def create_word_model(reviews, star):
 
     model.load_weights('./checkpoint/word_model/weights.h5')
 
-    # model.fit(np.array(x), y, epochs=EPOCHS, batch_size=BATCH_SIZE)
+    model.fit(np.array(x), y, epochs=EPOCHS, batch_size=BATCH_SIZE)
 
-    # model.save_weights('./checkpoint/word_model/weights.h5')
+    model.save_weights('./checkpoint/word_model/weights.h5')
 
     return model, tokenizer
 
@@ -100,7 +101,8 @@ if __name__ == "__main__":
     for i in range(GEN_SIZE):
         # Split review into list of words
         review_words = reviews[i].split()
-        fake_reviews.append(generate_review(model, tokenizer, ''.join(review_words[:PREFIX_SIZE]), len(review_words)))
+        seed = ' '.join(review_words[:PREFIX_SIZE])
+        fake_reviews.append(generate_review(model, tokenizer, seed, len(review_words)))
         print(f'\r{i+1}/{GEN_SIZE}', end= '')
 
     with open(data_file_name, 'w', encoding='utf8') as f:
