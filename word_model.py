@@ -69,7 +69,7 @@ def create_word_model(reviews, star):
         layers.LSTM(LSTM_NEURONS, return_sequences=True),
         layers.LSTM(LSTM_NEURONS),
         layers.Dropout(DROPOUT_RATE),
-        layers.Dense(vocab_size, activation='softmax')
+        layers.Dense(vocab_size, activation ='softmax')
     ])
     model.compile(loss='categorical_crossentropy', optimizer='adam')
 

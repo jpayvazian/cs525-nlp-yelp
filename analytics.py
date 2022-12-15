@@ -1,3 +1,4 @@
+from collections import Counter
 from utils import *
 from keras.preprocessing.text import Tokenizer
 from sklearn.feature_extraction.text import CountVectorizer
@@ -9,9 +10,11 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
+import nltk
 from transformers import TFAutoModel, AutoTokenizer, pipeline
 from nltk.tokenize import word_tokenize
 from nltk.probability import FreqDist
+import itertools
 
 def data_exploration():
     # Metrics for data exploration
@@ -298,6 +301,55 @@ def word_frequencies(star):
     real_df.to_csv(f'./plots/real_{star}star_frequencies.csv')
     fake_df.to_csv(f'./plots/fake_{star}star_frequencies.csv')
 
+def pos_tagging_analytics(star_num):
+
+    # Load data for specified star rating
+    real = load_data(REVIEW_FILES[star_num])['text'].to_list()[:GEN_SIZE]
+    fake = load_json(FAKE_REVIEW_FILES[star_num])
+
+    # Add labels and split data
+    real = pd.DataFrame(real, columns=['text'])
+    fake = pd.DataFrame(fake, columns=['text'])
+    real['label'] = 1
+    fake['label'] = 0
+    both = pd.concat([fake, real])
+
+    real['pos-tagging'] = real['text'].apply(lambda x: pos_tag(x))
+    fake['pos-tagging'] = fake['text'].apply(lambda x: pos_tag(x))
+
+
+    dict_pos_tagging = Counter()
+
+    for pos_dict in fake['pos-tagging']:
+        dict_pos_tagging = dict_pos_tagging + pos_dict
+        for key, value in dict_pos_tagging.items():
+            if key in dict_pos_tagging and key in pos_dict:
+               dict_pos_tagging[key] = value + pos_dict[key]       
+
+   
+    new_dict = dict(itertools.islice(dict_pos_tagging.items(),10))
+
+    data = (new_dict)
+    names = list(data.keys())
+    values = list(data.values())
+
+    plt.bar(range(len(data)), values, tick_label=names)
+    plt.title('Top 12 POS tags in fake reviews (' + star_num + ' star reviews)')
+    plt.show()    
+
+
+
+
+def pos_tag(text):
+
+    tokens = word_tokenize(text)
+    tags = nltk.pos_tag(tokens)
+
+    #find the number of each tags
+    counts = Counter( tag for word, tag in tags)
+
+    return counts
+
 if __name__ == "__main__":
 
     star_num = 0        # The star rating 1-5 indexed at 0-4
@@ -308,6 +360,15 @@ if __name__ == "__main__":
     # sentiment_machine_evaluation()
     # gpt_detector()
     # word_frequencies(star_num)
+
+
+    # pos analysis
+    pos_tagging_analytics(0)
+    pos_tagging_analytics(1)
+    pos_tagging_analytics(2)
+    pos_tagging_analytics(3)
+    pos_tagging_analytics(4)
+
 
     # Run machine eval multiple times and save to csv for averaging classifier accuracy
     # reps = 20

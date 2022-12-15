@@ -17,8 +17,8 @@ if __name__ == "__main__":
 
         print("Loading data...")
         reviews = load_data(REVIEW_FILES[int(star)-1])['text'].to_list()
-        file_name = os.path.join(DATA_DIR, TEXT_FILES[int(star) - 1])
-        run_name = f"{star}star_{EPOCHS}epoch"
+        # file_name = os.path.join(DATA_DIR, TEXT_FILES[int(star) - 1])
+        # run_name = f"{star}star_{EPOCHS}epoch"
         break
 
     # 2. User input for model type
