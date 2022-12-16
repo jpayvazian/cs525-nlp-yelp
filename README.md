@@ -8,6 +8,9 @@ Authors: Jack Ayvazian, Roopsa Ghosh, Dillon McCarthy
 * Models: `word_model.py` (Word based LSTM) , `char_model.py` (character based LSTM), `gpt.py` (Finetuned GPT2)
 * Evaluation: `analytics.py` contains functions for evaluation including data exploration, clustering, classifiers for real/fake and 1-5 stars, word frequency, bleu/rouge, etc.
 * `utils.py`: Functions for loading and cleaning data, global constants/hyperparameters
+* `plots/`: Plots for various clustering and frequency analysis
+* `data/`: Real and generated yelp food review data for each star rating (.txt copies used for finetuning gpt2)
+* `results/`: .csv files for classification metrics between real/fake reviews
 
 ### Motivation
 How can we generate realistic reviews for restaurants given a rating (1-5 stars), text seed (to begin the review), and word/char limit?
